@@ -85,6 +85,8 @@ class CheckForSpam implements ShouldQueue
                 'type' => $this->type,
                 'id' => $this->id
             ]);
+
+            report($e);
         }
     }
 
