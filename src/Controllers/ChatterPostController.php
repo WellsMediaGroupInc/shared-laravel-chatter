@@ -109,6 +109,13 @@ class ChatterPostController extends Controller
         }
 
         if ($new_post->id) {
+            // Dispatch spam check job
+            dispatch(new \DevDojo\Chatter\Jobs\CheckForSpam(
+                'post',
+                $new_post->id,
+                $request->body
+            ));
+
             $discussion->last_reply_at = $discussion->freshTimestamp();
             $discussion->save();
 

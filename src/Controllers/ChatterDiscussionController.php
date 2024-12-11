@@ -149,6 +149,14 @@ class ChatterDiscussionController extends Controller
         $post = Models::post()->create($new_post);
 
         if ($post->id) {
+            // Dispatch spam check job
+            dispatch(new \DevDojo\Chatter\Jobs\CheckForSpam(
+                'discussion',
+                $discussion->id,
+                $request->body,
+                $request->title
+            ));
+
             Event::dispatch(new ChatterAfterNewDiscussion($request, $discussion, $post));
             if (function_exists('chatter_after_new_discussion')) {
                 chatter_after_new_discussion($request);
