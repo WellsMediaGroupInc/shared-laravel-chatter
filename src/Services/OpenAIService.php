@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace DevDojo\Chatter\Services;
 
 use Illuminate\Support\Facades\Log;
 class OpenAIService

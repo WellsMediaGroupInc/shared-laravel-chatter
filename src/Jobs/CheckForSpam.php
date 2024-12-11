@@ -10,7 +10,7 @@ use Illuminate\Queue\SerializesModels;
 use DevDojo\Chatter\Models\Models;
 use DevDojo\Chatter\Models\SpamCheck;
 use Illuminate\Support\Facades\Log;
-use App\Services\OpenAIService;
+use DevDojo\Chatter\Services\OpenAIService;
 class CheckForSpam implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
