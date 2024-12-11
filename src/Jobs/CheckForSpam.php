@@ -95,8 +95,6 @@ class CheckForSpam implements ShouldQueue
             ["role" => "user", "content" => $content]
         ]);
 
-        $response = json_decode($response, true);
-
         if (isset($response['choices'][0]['message']['content'])) {
             $result = json_decode($response['choices'][0]['message']['content'], true);
             $result['metadata'] = [
