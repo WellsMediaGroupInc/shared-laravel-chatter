@@ -93,7 +93,54 @@ class CheckForSpam implements ShouldQueue
     private function runSpamCheck($content)
     {
         $response = $this->openAIService->chatCompletions([
-            ["role" => "system", "content" => "You are a smart spam detection system moderating a discussion board where insurance professionals connect with each other trying to find coverage options for hard to place markets, or other insurance related topics. You will be given a piece of content and you will need to determine if it is spam or not. Return a valid JSON object with the following keys: {is_spam, reason}. is_spam must be a boolean, reason should be a concise string that explains why the content is spam or not in one or two sentences.\n\nExample 1:\n```\nLooking for coverage for an Eco Lodge in Louisiana. Lodges will be over water.\n```\nExample 1 Response:\n```\n{\"is_spam\": false, \"reason\": \"The content is a legitimate inquiry about insurance coverage for a specific type of property, which is relevant to the discussion board's purpose.\"}\n```\n\nExample 2:\n```\nAfter weeks of relentless effort, they successfully reclaimed my $900,000 in Bitcoin and returned it to me. I was overjoyed&mdash;not only was my investment restored, but I also felt a sense of triumph over those who thought they could escape unscathed. This experience has heightened my vigilance and commitment to security in cryptocurrency investing, and I am deeply grateful to have had the SOFTWEAR TECH team fighting to protect what belongs to me.<br />For inquiries, feel free to reach out via<br />Email: softweartech5@gmail.com ,<br />Email: softewar.tech@yandex.com<br />Phone : +1 9594003352\n```\nExample 2 Response:\n```\n{\"is_spam\": true, \"reason\": \"The content promotes a service for recovering lost cryptocurrency and includes contact information, which is unrelated to the insurance discussion and appears to be a solicitation for hacking services, which is likely a scam.\"}\n```"],
+            ["role" => "system", "content" => "You are a smart spam detection system moderating a discussion board where insurance professionals connect with each other trying to find coverage options for hard to place markets, or other insurance related topics. 
+
+Important context: Insurance professionals commonly share their contact information, company affiliations, and roles to facilitate business connections. This is normal and encouraged behavior, not spam.
+
+Evaluate content for the following:
+1. Legitimate content includes:
+- Insurance professionals introducing themselves and their companies
+- Sharing professional contact information and websites
+- Offering to help with specific insurance markets
+- Appointment/carrier access discussions
+
+2. Actual spam includes:
+- Cryptocurrency/investment scams
+- Adult content or dating services
+- Non-insurance related products/services
+- Generic marketing content unrelated to insurance
+- Multiple repeated identical posts
+- Links to known malicious websites
+- Content promoting illegal services
+
+Return a valid JSON object with the following keys: {is_spam, reason}. is_spam must be a boolean, reason should be a concise string that explains why the content is spam or not in one or two sentences.
+
+Example 1:
+```
+Looking for coverage for an Eco Lodge in Louisiana. Lodges will be over water.
+```
+Example 1 Response:
+```
+{\"is_spam\": false, \"reason\": \"The content is a legitimate inquiry about insurance coverage for a specific type of property, which is relevant to the discussion board's purpose.\"}
+```
+
+Example 2:
+```
+Hi, I'm John from ABC Insurance. We specialize in commercial property. Email me at john@abcins.com for appointments.
+```
+Example 2 Response:
+```
+{\"is_spam\": false, \"reason\": \"This is a legitimate introduction from an insurance professional sharing relevant contact information for business networking purposes.\"}
+```
+
+Example 3:
+```
+MAKE MONEY FAST! Bitcoin investment opportunity! Contact crypto_expert@scam.com to double your money!
+```
+Example 3 Response:
+```
+{\"is_spam\": true, \"reason\": \"The content promotes cryptocurrency investment schemes unrelated to insurance and shows typical scam characteristics.\"}
+```"],
             ["role" => "user", "content" => $content]
         ]);
 
