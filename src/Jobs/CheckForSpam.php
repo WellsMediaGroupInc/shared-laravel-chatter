@@ -92,8 +92,7 @@ class CheckForSpam implements ShouldQueue
 
     private function runSpamCheck($content)
     {
-        $response = $this->openAIService->chatCompletions([
-            ["role" => "system", "content" => "You are a smart spam detection system moderating a discussion board where insurance professionals connect with each other trying to find coverage options for hard to place markets, or other insurance related topics. 
+        $systemMessage = "You are a smart spam detection system moderating a discussion board where insurance professionals connect with each other trying to find coverage options for hard to place markets, or other insurance related topics. 
 
 Important context: Insurance professionals commonly share their contact information, company affiliations, and roles to facilitate business connections. This is normal and encouraged behavior, not spam.
 
@@ -140,12 +139,39 @@ MAKE MONEY FAST! Bitcoin investment opportunity! Contact crypto_expert@scam.com 
 Example 3 Response:
 ```
 {\"is_spam\": true, \"reason\": \"The content promotes cryptocurrency investment schemes unrelated to insurance and shows typical scam characteristics.\"}
-```"],
+```";
+
+        $messages = [
+            ["role" => "system", "content" => $systemMessage],
             ["role" => "user", "content" => $content]
-        ]);
+        ];
+
+        $response = $this->openAIService->chatCompletions($messages);
 
         if (isset($response['choices'][0]['message']['content'])) {
             $result = json_decode($response['choices'][0]['message']['content'], true);
+            
+            // Check if response is missing required keys
+            if (!isset($result['is_spam'])) {
+                // Retry with formatting reminder but keep full context
+                $messages[] = ["role" => "assistant", "content" => $response['choices'][0]['message']['content']];
+                $messages[] = ["role" => "user", "content" => "Sorry, but that doesn't match the formatting I require. Please ensure the is_spam key is present in your JSON response analysis of the content. The response must be a valid JSON object with both 'is_spam' (boolean) and 'reason' (string) keys."];
+                
+                $response = $this->openAIService->chatCompletions($messages);
+                
+                if (isset($response['choices'][0]['message']['content'])) {
+                    $result = json_decode($response['choices'][0]['message']['content'], true);
+                }
+            }
+            
+            // If still invalid after retry, use safe default
+            if (!isset($result['is_spam'])) {
+                $result = [
+                    'is_spam' => false,
+                    'reason' => "Unable to determine spam status due to malformed AI response. Defaulting to non-spam for safety.",
+                ];
+            }
+
             $result['metadata'] = [
                 'prompt_tokens' => $response['usage']['prompt_tokens'] ?? 0,
                 'completion_tokens' => $response['usage']['completion_tokens'] ?? 0,
