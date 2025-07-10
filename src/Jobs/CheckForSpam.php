@@ -164,7 +164,23 @@ Example 3 Response:
                 }
             }
             
-            // If still invalid after retry, use safe default
+            // If still invalid after retry, try one more time with HTML stripped
+            if (!isset($result['is_spam'])) {
+                $cleanContent = $this->stripHtmlAndCleanContent($content);
+                
+                $cleanMessages = [
+                    ["role" => "system", "content" => $systemMessage],
+                    ["role" => "user", "content" => $cleanContent]
+                ];
+                
+                $response = $this->openAIService->chatCompletions($cleanMessages);
+                
+                if (isset($response['choices'][0]['message']['content'])) {
+                    $result = json_decode($response['choices'][0]['message']['content'], true);
+                }
+            }
+            
+            // If still invalid after all retries, use safe default
             if (!isset($result['is_spam'])) {
                 $result = [
                     'is_spam' => false,
@@ -185,5 +201,22 @@ Example 3 Response:
         }
 
         return $result;
+    }
+
+    private function stripHtmlAndCleanContent($content)
+    {
+        // Strip HTML tags
+        $cleanContent = strip_tags($content);
+        
+        // Remove extra whitespace and normalize line breaks
+        $cleanContent = preg_replace('/\s+/', ' ', $cleanContent);
+        $cleanContent = trim($cleanContent);
+        
+        // If content is too short after cleaning, return original
+        if (strlen($cleanContent) < 10) {
+            return $content;
+        }
+        
+        return $cleanContent;
     }
 } 
